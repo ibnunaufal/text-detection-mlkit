@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 import com.google.mlkit.common.model.LocalModel;
 import com.google.mlkit.vision.objects.ObjectDetectorOptionsBase;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
+import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 import com.naufall.textdetection.CameraSource;
 import com.naufall.textdetection.R;
 
@@ -47,6 +48,50 @@ public class PreferenceUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static CustomObjectDetectorOptions getCustomObjectDetectorOptionsForStillImage(
+            Context context, LocalModel localModel) {
+        return getCustomObjectDetectorOptions(
+                context,
+                localModel,
+                R.string.pref_key_still_image_object_detector_enable_multiple_objects,
+                R.string.pref_key_still_image_object_detector_enable_classification,
+                CustomObjectDetectorOptions.SINGLE_IMAGE_MODE);
+    }
+
+
+    public static ObjectDetectorOptions getObjectDetectorOptionsForStillImage(Context context) {
+        return getObjectDetectorOptions(
+                context,
+                R.string.pref_key_still_image_object_detector_enable_multiple_objects,
+                R.string.pref_key_still_image_object_detector_enable_classification,
+                ObjectDetectorOptions.SINGLE_IMAGE_MODE);
+    }
+
+
+    private static ObjectDetectorOptions getObjectDetectorOptions(
+            Context context,
+            @StringRes int prefKeyForMultipleObjects,
+            @StringRes int prefKeyForClassification,
+            @ObjectDetectorOptionsBase.DetectorMode int mode) {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        boolean enableMultipleObjects =
+                sharedPreferences.getBoolean(context.getString(prefKeyForMultipleObjects), false);
+        boolean enableClassification =
+                sharedPreferences.getBoolean(context.getString(prefKeyForClassification), true);
+
+        ObjectDetectorOptions.Builder builder =
+                new ObjectDetectorOptions.Builder().setDetectorMode(mode);
+        if (enableMultipleObjects) {
+            builder.enableMultipleObjects();
+        }
+        if (enableClassification) {
+            builder.enableClassification();
+        }
+        return builder.build();
     }
 
 
