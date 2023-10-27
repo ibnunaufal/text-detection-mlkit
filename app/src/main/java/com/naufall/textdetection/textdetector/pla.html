@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+    <title>Contoh Input Text dengan onchange</title>
+</head>
+<body style="height: 100%;">
+<input type="text" id="inputText" onkeyup="updateH1()">
+<div style="height:100%;display: flex;justify-content: center;align-content: center;align-items: center;">
+    <h1 id="outputText" style="font-size:200px;"></h1>
+</div>
+
+<script>
+        function updateH1() {
+            var inputElement = document.getElementById("inputText");
+            var outputElement = document.getElementById("outputText");
+            outputElement.textContent = inputElement.value.toUpperCase();
+        }
+    </script>
+</body>
+</html>

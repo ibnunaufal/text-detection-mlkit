@@ -1,7 +1,10 @@
 package com.naufall.textdetection.textdetector
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
@@ -11,6 +14,7 @@ import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
 import com.naufall.textdetection.GraphicOverlay
 import com.naufall.textdetection.VisionProcessorBase
 import com.naufall.textdetection.preferences.PreferenceUtils
+import com.naufall.textdetection.preferences.SharedPref
 
 
 /** Processor for the text detector demo. */
@@ -33,8 +37,27 @@ class TextRecognitionProcessor(
         return textRecognizer.process(image)
     }
 
+    private fun saveText(text: String){
+        val temp = SharedPref.getTextResult(context)
+        if(text == temp) return
+        Toast.makeText(context, "Plat nomor ditemukan\n$text", Toast.LENGTH_SHORT).show()
+        SharedPref.saveTextResult(context, text)
+        val intent = Intent("FirebaseFunction")
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+    }
+    private fun cekPlatNomor(input: String): String? {
+//        val pattern = "^[A-Z]{1,3} \\d{1,4} [A-Z]{1,3}$".toRegex()
+//        return pattern.matches(input)
+        val pattern = "[A-Z]{1,3}\\s?\\d{1,4}\\s?[A-Z]{1,3}".toRegex()
+        val matchResult = pattern.find(input)
+        return matchResult?.value
+    }
+
     override fun onSuccess(text: Text, graphicOverlay: GraphicOverlay) {
         Log.d(TAG, "On-device Text detection successful")
+
+        val result = cekPlatNomor(text.text)
+        if (result != null) saveText(result)
         logExtrasForTesting(text)
         graphicOverlay.add(
             TextGraphic(

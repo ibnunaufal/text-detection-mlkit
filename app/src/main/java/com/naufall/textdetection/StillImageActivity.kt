@@ -1,9 +1,12 @@
 package com.naufall.textdetection
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.ContentValues
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
@@ -15,12 +18,16 @@ import android.util.Pair
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.naufall.textdetection.objectdetector.ObjectDetectorProcessor
 import com.naufall.textdetection.preferences.PreferenceUtils
+import com.naufall.textdetection.preferences.SharedPref
 import com.naufall.textdetection.textdetector.TextRecognitionProcessor
 import java.io.IOException
 
@@ -28,7 +35,7 @@ class StillImageActivity : AppCompatActivity() {
 
     private var preview: ImageView? = null
     private var graphicOverlay: GraphicOverlay? = null
-    private var selectedMode = OBJECT_DETECTION_CUSTOM
+    private var selectedMode = TEXT_RECOGNITION_LATIN
     private var selectedSize: String? = SIZE_SCREEN
     private var isLandScape = false
     private var imageUri: Uri? = null
@@ -39,6 +46,7 @@ class StillImageActivity : AppCompatActivity() {
     private var imageProcessor: VisionImageProcessor? = null
     var objectType: String? = null
     var objectNumber: String? = null
+    var textResult: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +77,31 @@ class StillImageActivity : AppCompatActivity() {
             }
         )
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter("FirebaseFunction"))
+        val localText = SharedPref.getTextResult(this)
+        val res = findViewById<TextView>(R.id.txt_number)
+        localText?.let {
+            textResult = it
+            res.text = it
+        }
+    }
+
+    private var receiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            if (intent != null){
+                getAndShowResult()
+            }
+        }
+    }
+
+    private fun getAndShowResult(){
+        val localText = SharedPref.getTextResult(this)
+        if(localText != textResult){
+            localText?.let { textResult = it }
+            val res = findViewById<TextView>(R.id.txt_number)
+            res.text = localText
+            Toast.makeText(this, "Plat nomor ditemukan\n$localText", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -153,6 +186,7 @@ class StillImageActivity : AppCompatActivity() {
     public override fun onDestroy() {
         super.onDestroy()
         imageProcessor?.run { this.stop() }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
     }
 
     private fun createImageProcessor() {

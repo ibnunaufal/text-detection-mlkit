@@ -9,11 +9,13 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.Button
 import android.widget.CompoundButton
+import android.widget.TextView
 import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.core.content.ContextCompat
 import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.naufall.textdetection.preferences.SharedPref
 import com.naufall.textdetection.textdetector.TextRecognitionProcessor
 import java.io.IOException
 
@@ -33,6 +35,13 @@ class MainActivity : AppCompatActivity() {
         btn_still.setOnClickListener {
             startActivity(Intent(this, StillImageActivity::class.java))
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val res = findViewById<TextView>(R.id.txt_result)
+        val localText = SharedPref.getTextResult(this)
+        localText?.let { res.text = it }
     }
 
 }
